@@ -6,6 +6,7 @@ import { Pen, MessageSquare, AppWindow, Target, Presentation, Lightbulb, Trendin
 import Link from "next/link"
 import { ContainerScroll } from "@/components/ui/container-scroll-animation"
 import { StickyScroll } from "@/components/ui/sticky-scroll-reveal"
+import HomeIntro from "@/components/HomeIntro"
 import Image from "next/image"
 import { motion } from "motion/react"
 import { HeroHighlight, Highlight } from "@/components/ui/hero-highlight"
@@ -152,6 +153,8 @@ export default function Home() {
             </motion.div>
           </HeroHighlight>
         </section>
+
+        <HomeIntro />
 
         {/* Companies Section */}
         {/* <section className="py-12 md:py-16 bg-background border-b">
