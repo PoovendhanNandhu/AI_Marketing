@@ -19,7 +19,6 @@ The root directory also contains several `.sql` files for setting up and migrati
 -   **Chat Assistant:** An AI-powered assistant to help with your marketing questions.
 -   **User Authentication:** Secure user sign-up and login.
 -   **Subscription Plans:** Different tiers of service with varying usage limits, managed via Stripe.
--   **Admin Dashboard:** For managing users and messages.
 
 ## Setup Instructions
 
