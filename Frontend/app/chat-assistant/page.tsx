@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bot, Send, Sparkles, ThumbsUp, ThumbsDown, Copy, Loader2 } from "lucide-react";
 import { AnimatedParagraphs } from "@/components/ui/animated-paragraphs";
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '../../lib/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 

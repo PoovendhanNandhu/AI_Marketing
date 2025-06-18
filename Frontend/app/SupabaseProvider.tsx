@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '../lib/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import dynamic from 'next/dynamic';
 
@@ -35,7 +35,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
              window.location.pathname.includes('/admin'))) {
           
           // Dynamically import the realtime client
-          const { createDynamicClient } = await import('@/lib/supabase/dynamic-client');
+          const { createDynamicClient } = await import('../lib/supabase/dynamic-client');
           await createDynamicClient();
           
           if (isMounted) {
