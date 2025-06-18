@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
+// import { Progress } from '@/components/ui/progress';
 
 // Types
 interface ImageGenOptions {
@@ -468,7 +468,7 @@ export default function ImageGenerator() {
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">
-                  Images used: {usageStats.used} of {usageStats.limit === Infinity ? 'Unlimited' : usageStats.limit}
+                  Images used: {usageStats.used} of {usageStats.limit === -1 ? 'Unlimited' : usageStats.limit}
                 </span>
                 {!usageStats.isPremium && (
                   <Button
@@ -480,8 +480,15 @@ export default function ImageGenerator() {
                   </Button>
                 )}
               </div>
-              <Progress value={usageStats.limit === Infinity ? 0 : (usageStats.used / usageStats.limit) * 100} />
-              {usageStats.limit !== Infinity && usageStats.used >= usageStats.limit - 1 && (
+              <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out" 
+                  style={{ 
+                    width: `${usageStats.limit === -1 ? 0 : Math.min((usageStats.used / usageStats.limit) * 100, 100)}%` 
+                  }}
+                ></div>
+              </div>
+              {usageStats.limit !== -1 && usageStats.used >= usageStats.limit - 1 && (
                 <Alert variant="default" className="mt-2">
                   <Info className="h-4 w-4" />
                   <AlertDescription>
@@ -491,7 +498,7 @@ export default function ImageGenerator() {
                   </AlertDescription>
                 </Alert>
               )}
-              {usageStats.limit === Infinity && (
+              {usageStats.limit === -1 && (
                 <Alert variant="default" className="mt-2 bg-green-50 text-green-900 dark:bg-green-900/20 dark:text-green-300">
                   <Sparkles className="h-4 w-4" />
                   <AlertDescription>

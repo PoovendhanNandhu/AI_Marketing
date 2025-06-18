@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
 // Component to animate paragraphs sequentially
 export function AnimatedParagraphs({ text = "" }: { text?: string }) {
@@ -32,7 +32,7 @@ export function AnimatedParagraphs({ text = "" }: { text?: string }) {
       className="space-y-4 whitespace-pre-wrap"
     >
       {paragraphs.map((para, idx) => (
-        <motion.p key={idx} variants={paragraphVariants}>
+        <motion.p key={idx} variants={paragraphVariants as Variants}>
           {para}
         </motion.p>
       ))}
