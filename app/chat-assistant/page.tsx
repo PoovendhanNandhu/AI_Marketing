@@ -61,7 +61,7 @@ export default function ChatAssistant() {
   });
 
   const saveChatHistory = useCallback(async (currentMessages: Message[], userId: string, recordId: string | null) => {
-    if (!userId) return;
+    if (!userId || !supabase) return;
     
     let title = "New Chat";
     const firstUserMessage = currentMessages.find(msg => msg.role === "user");
@@ -99,7 +99,7 @@ export default function ChatAssistant() {
   }, [supabase]);
 
   const loadChatHistory = useCallback(async (userId: string) => {
-    if (!userId) return;
+    if (!userId || !supabase) return;
     
     try {
       const { data: historyData, error: historyError } = await supabase
@@ -128,39 +128,52 @@ export default function ChatAssistant() {
 
   useEffect(() => {
     const checkUserAndLoadHistory = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
+      if (!supabase) {
+        console.log("Supabase client not available, redirecting to login");
         router.replace('/login');
         setLoadingHistory(false);
         return;
       }
-      setUser(session.user);
-      const userId = session.user.id;
 
       try {
-        const { data: historyData, error: historyError } = await supabase
-          .from('chat_history')
-          .select('id, messages, created_at, title')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (historyError) {
-          console.error("Error loading initial chat history:", historyError);
-        } else if (historyData?.messages) {
-          if (Array.isArray(historyData.messages)) {
-            setMessages(historyData.messages);
-            setHistoryId(historyData.id);
-          }
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          router.replace('/login');
+          setLoadingHistory(false);
+          return;
         }
-      } catch (err) {
-        console.error("Unexpected error loading initial history:", err);
-      } finally {
+        setUser(session.user);
+        const userId = session.user.id;
+
+        try {
+          const { data: historyData, error: historyError } = await supabase
+            .from('chat_history')
+            .select('id, messages, created_at, title')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (historyError) {
+            console.error("Error loading initial chat history:", historyError);
+          } else if (historyData?.messages) {
+            if (Array.isArray(historyData.messages)) {
+              setMessages(historyData.messages);
+              setHistoryId(historyData.id);
+            }
+          }
+        } catch (err) {
+          console.error("Unexpected error loading initial history:", err);
+        } finally {
+          setLoadingHistory(false);
+        }
+
+        loadChatHistory(userId);
+      } catch (error) {
+        console.error("Error in checkUserAndLoadHistory:", error);
+        router.replace('/login');
         setLoadingHistory(false);
       }
-
-      loadChatHistory(userId);
     };
 
     checkUserAndLoadHistory();
@@ -168,7 +181,7 @@ export default function ChatAssistant() {
 
   useEffect(() => {
     const getSubscription = async () => {
-      if (!user) return;
+      if (!user || !supabase) return;
       
       try {
         // First check if the user already has a subscription
@@ -322,7 +335,7 @@ export default function ChatAssistant() {
   };
 
   const updateUsageCount = useCallback(async () => {
-    if (!user || !subscription) return;
+    if (!user || !subscription || !supabase) return;
     
     try {
       // Increment chat messages used
