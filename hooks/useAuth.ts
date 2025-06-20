@@ -16,8 +16,8 @@ type AuthState = {
  * @param {string} redirectTo - Where to redirect if authentication is required but user is not logged in
  */
 export function useAuth(requireAuth = false, redirectTo = '/login') {
-  const supabase = createClient();
   const router = useRouter();
+  const [supabase, setSupabase] = useState<any>(null);
   const [authState, setAuthState] = useState<AuthState>({
     session: null,
     user: null,
@@ -25,7 +25,31 @@ export function useAuth(requireAuth = false, redirectTo = '/login') {
     isAuthenticated: false,
   });
 
+  // Initialize Supabase client safely
   useEffect(() => {
+    try {
+      const client = createClient();
+      if (client) {
+        setSupabase(client);
+      } else {
+        console.error('Failed to initialize Supabase client in useAuth');
+        setAuthState(prev => ({ ...prev, isLoading: false }));
+        if (requireAuth) {
+          setTimeout(() => router.replace(redirectTo), 3000);
+        }
+      }
+    } catch (error) {
+      console.error('Error initializing Supabase client in useAuth:', error);
+      setAuthState(prev => ({ ...prev, isLoading: false }));
+      if (requireAuth) {
+        setTimeout(() => router.replace(redirectTo), 3000);
+      }
+    }
+  }, [router, requireAuth, redirectTo]);
+
+  useEffect(() => {
+    if (!supabase) return;
+
     // Function to check and set auth state
     const checkAuth = async () => {
       try {
@@ -119,7 +143,9 @@ export function useAuth(requireAuth = false, redirectTo = '/login') {
 
   // Expose auth methods along with state
   const signOut = async () => {
-    await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     router.push('/');
     router.refresh();
   };

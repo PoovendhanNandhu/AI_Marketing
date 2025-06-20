@@ -13,6 +13,7 @@ import { AnimatedParagraphs } from "@/components/ui/animated-paragraphs";
 import { createClient } from '@/lib/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface Message {
   role: "user" | "assistant";
@@ -28,6 +29,7 @@ interface ChatHistory {
 
 export default function ChatAssistant() {
   const router = useRouter();
+  const { user, isLoading: authLoading, session } = useAuth(true, '/login');
   const [supabase, setSupabase] = useState<any>(null);
 
   // Initialize Supabase client on the client side
@@ -44,7 +46,6 @@ export default function ChatAssistant() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [suggestionCategory, setSuggestionCategory] = useState<string>("content");
-  const [user, setUser] = useState<User | null>(null);
   const [historyId, setHistoryId] = useState<string | null>(null);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
@@ -128,22 +129,14 @@ export default function ChatAssistant() {
 
   useEffect(() => {
     const checkUserAndLoadHistory = async () => {
-      if (!supabase) {
-        console.log("Supabase client not available, redirecting to login");
-        router.replace('/login');
-        setLoadingHistory(false);
-        return;
+      // Wait for Supabase client to be initialized and user to be authenticated
+      if (!supabase || !user) {
+        console.log("Waiting for Supabase client and user authentication...");
+        return; // Don't proceed until both are ready
       }
 
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
-          router.replace('/login');
-          setLoadingHistory(false);
-          return;
-        }
-        setUser(session.user);
-        const userId = session.user.id;
+        const userId = user.id;
 
         try {
           const { data: historyData, error: historyError } = await supabase
@@ -177,7 +170,7 @@ export default function ChatAssistant() {
     };
 
     checkUserAndLoadHistory();
-  }, [supabase, router, loadChatHistory]);
+  }, [supabase, router, loadChatHistory, user]);
 
   useEffect(() => {
     const getSubscription = async () => {
@@ -431,6 +424,21 @@ export default function ChatAssistant() {
 
   if (loadingHistory && user) {
     return <div className="flex items-center justify-center h-screen">Loading Chat...</div>;
+  }
+
+  // Show loading state while authenticating
+  if (authLoading) {
+    return (
+      <div className="flex flex-col h-screen">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+            <h3 className="text-lg font-semibold">Initializing Chat Assistant...</h3>
+            <p className="text-muted-foreground">Setting up your secure connection</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
