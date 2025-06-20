@@ -112,7 +112,7 @@ export default function ChatAssistant() {
         console.error("Error loading chat history:", historyError);
         setChatHistory([]);
       } else if (historyData) {
-        const typedData = historyData.map(chat => ({
+        const typedData = historyData.map((chat: any) => ({
           id: chat.id,
           messages: Array.isArray(chat.messages) ? chat.messages : [],
           created_at: chat.created_at,
