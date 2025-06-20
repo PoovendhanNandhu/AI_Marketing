@@ -7,6 +7,14 @@ const nextConfig = {
   },
   images: { unoptimized: true },
   // Standard Next.js build for Netlify
+  experimental: {
+    esmExternals: false, // Helps with Supabase compatibility
+  },
+  env: {
+    // Ensure environment variables are available at build time
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  },
   webpack: (config, { isServer }) => {
     // Add webpack aliases for path resolution
     config.resolve.alias = {

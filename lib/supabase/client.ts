@@ -8,19 +8,18 @@ export const createClient = () => {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   // During build time or SSR, environment variables might not be available
-  // Return a mock client or null to prevent build failures
+  // Return null to prevent build failures but allow runtime initialization
   if (!supabaseUrl || !supabaseAnonKey) {
-    // Check if we're in a build environment
-    if (typeof window === 'undefined' && process.env.NODE_ENV === 'production') {
-      console.warn('Supabase environment variables not available during build. This is expected for static generation.');
-      // Return a mock client that won't cause errors during build
+    // Check if we're in a build environment or server-side
+    if (typeof window === 'undefined') {
+      console.warn('Supabase environment variables not available during build/SSR. This is expected for static generation.');
+      // Return null for build-time, will be handled by client-side checks
       return null as any;
     }
     
-    // For development or client-side, still throw the error
-    throw new Error(
-      'Missing Supabase URL or Anon Key in environment variables. Make sure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in .env.local'
-    );
+    // For client-side, log the error but don't throw to prevent crashes
+    console.error('Missing Supabase URL or Anon Key in environment variables. Authentication features will not work.');
+    return null as any;
   }
 
   // Add global headers for all requests

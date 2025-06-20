@@ -8,6 +8,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useScroll, useMotionValueEvent } from "motion/react";
 import type { Session } from '@supabase/supabase-js';
 import { useSupabase } from '@/app/SupabaseProvider';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import {
   Navbar,
   NavBody,
@@ -274,39 +275,43 @@ export function MainLayoutClient({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
-      <Navbar className="top-0 sticky" shouldHide={isHidden} visible={effectiveVisible ? true : undefined}>
-          {/* Desktop Navbar */}
-          <NavBody className="max-w-full px-6"> 
-            <NavbarLogo />
-            <NavItems items={navItems} />
-            {/* Pass session to DesktopNavActions - show loading state if needed */} 
-            <DesktopNavActions visible={effectiveVisible} session={loadingSession ? null : session}/> 
-          </NavBody>
-
-          {/* Mobile Navbar */}
-          <MobileNav className="px-4"> 
-            <MobileNavHeader>
+    <ErrorBoundary>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <Navbar className="top-0 sticky" shouldHide={isHidden} visible={effectiveVisible ? true : undefined}>
+            {/* Desktop Navbar */}
+            <NavBody className="max-w-full px-6"> 
               <NavbarLogo />
-              <MobileNavToggle isOpen={mobileMenuOpen} onClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
-            </MobileNavHeader>
-            
-            {/* Mobile menu */}
-            <MobileNavMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)}>
-              <NavItems items={navItems} onItemClick={() => setMobileMenuOpen(false)} className="flex-col w-full" />
-              {/* Pass the session to MobileNavActions */}
-              <MobileNavActions session={loadingSession ? null : session} />
-            </MobileNavMenu>
-          </MobileNav>
-      </Navbar>
+              <NavItems items={navItems} />
+              {/* Pass session to DesktopNavActions - show loading state if needed */} 
+              <DesktopNavActions visible={effectiveVisible} session={loadingSession ? null : session}/> 
+            </NavBody>
 
-      <main>{children}</main>
-      <Toaster />
-    </ThemeProvider>
+            {/* Mobile Navbar */}
+            <MobileNav className="px-4"> 
+              <MobileNavHeader>
+                <NavbarLogo />
+                <MobileNavToggle isOpen={mobileMenuOpen} onClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
+              </MobileNavHeader>
+              
+              {/* Mobile menu */}
+              <MobileNavMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)}>
+                <NavItems items={navItems} onItemClick={() => setMobileMenuOpen(false)} className="flex-col w-full" />
+                {/* Pass the session to MobileNavActions */}
+                <MobileNavActions session={loadingSession ? null : session} />
+              </MobileNavMenu>
+            </MobileNav>
+        </Navbar>
+
+        <ErrorBoundary>
+          <main>{children}</main>
+        </ErrorBoundary>
+        <Toaster />
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 } 

@@ -95,6 +95,11 @@ export default function ImageGenerator() {
   // Fetch current user and usage stats
   useEffect(() => {
     const fetchUserAndStats = async () => {
+      if (!supabase) {
+        setIsLoadingStats(false);
+        return;
+      }
+      
       try {
         setIsLoadingStats(true);
         
