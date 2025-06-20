@@ -9,6 +9,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { useToast } from '@/components/ui/use-toast';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from "@/hooks/useAuth";
+import { apiEndpoints } from '@/lib/config';
 
 // Initialize Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
@@ -103,7 +104,7 @@ export default function PricingPage() {
       try {
         setPlansLoading(true);
         console.log("Fetching plans from API...");
-        const response = await fetch('http://localhost:3001/api/stripe/plans');
+        const response = await fetch(apiEndpoints.stripe.plans);
         
         if (response.ok) {
           const plansData = await response.json();
@@ -181,7 +182,7 @@ export default function PricingPage() {
         console.log(`Using known Stripe customer ID: ${stripeCustomerId} for user: ${user.id}`);
       }
       
-      const response = await fetch('http://localhost:3001/api/stripe/create-checkout-session', {
+      const response = await fetch(apiEndpoints.stripe.createCheckout, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

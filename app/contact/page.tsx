@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Mail, MessageSquare, Send, Phone, MapPin } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { apiEndpoints } from '@/lib/config';
 
 export default function ContactPage() {
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function ContactPage() {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('http://localhost:3001/api/contact/submit', {
+      const response = await fetch(apiEndpoints.contact.submit, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

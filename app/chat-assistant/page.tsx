@@ -14,6 +14,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { apiEndpoints } from '@/lib/config';
 
 export interface Message {
   role: "user" | "assistant";
@@ -381,7 +382,7 @@ export default function ChatAssistant() {
       await updateUsageCount();
       
       const systemInstruction = "You are an expert marketing assistant. Focus on providing actionable marketing strategies, creative content ideas, and professional advice. Be concise, enthusiastic, and solution-oriented. Address the user professionally but with a friendly tone.";
-      const response = await fetch("http://localhost:3001/api/chat", {
+              const response = await fetch(apiEndpoints.chat, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
