@@ -6,8 +6,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: { unoptimized: true },
-  // Standard Next.js build for Netlify (not static export since we need auth routes)
-  trailingSlash: true,
+  // Standard Next.js build for Netlify
   webpack: (config, { isServer }) => {
     // Add webpack aliases for path resolution
     config.resolve.alias = {

@@ -37,15 +37,15 @@ export default function LoginPage() {
     
     const checkSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          // User is already logged in, redirect to home
-          router.replace('/');
-        }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // User is already logged in, redirect to home
+        router.replace('/');
+      }
       } catch (error) {
         console.error('Error checking session:', error);
       } finally {
-        setCheckingSession(false);
+      setCheckingSession(false);
       }
     };
     

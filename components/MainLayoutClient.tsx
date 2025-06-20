@@ -160,22 +160,30 @@ export function MainLayoutClient({ children }: { children: React.ReactNode }) {
     }
     return null;
   });
-  const [loadingSession, setLoadingSession] = useState(true);
+  const [loadingSession, setLoadingSession] = useState(false);
 
   // Fetch initial session & subscribe to auth changes
   useEffect(() => {
     if (!supabase || isLoading) return;
 
+    setLoadingSession(true);
+    
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      // Save to localStorage for next page load
-      if (session) {
-        localStorage.setItem('userSession', JSON.stringify(session));
-      } else {
-        localStorage.removeItem('userSession');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        // Save to localStorage for next page load
+        if (session) {
+          localStorage.setItem('userSession', JSON.stringify(session));
+        } else {
+          localStorage.removeItem('userSession');
+        }
+      } catch (error) {
+        console.error('Error getting session:', error);
+        setSession(null);
+      } finally {
+        setLoadingSession(false);
       }
-      setLoadingSession(false);
     };
 
     getSession();
@@ -189,7 +197,6 @@ export function MainLayoutClient({ children }: { children: React.ReactNode }) {
         } else {
           localStorage.removeItem('userSession');
         }
-        setLoadingSession(false);
       }
     );
 
@@ -234,7 +241,7 @@ export function MainLayoutClient({ children }: { children: React.ReactNode }) {
   };
 
   // Show minimal loading UI while Supabase is loading
-  if (loadingSession || isLoading) {
+  if (isLoading) {
     return (
       <ThemeProvider
         attribute="class"
@@ -245,9 +252,18 @@ export function MainLayoutClient({ children }: { children: React.ReactNode }) {
         <Navbar className="top-0 sticky" visible={undefined}>
           <NavBody className="max-w-full px-6"> 
             <NavbarLogo />
-            <div className="flex-1" />
-            <div className="ml-auto" />
+            <NavItems items={navItems} />
+            <div className="flex items-center gap-x-2 ml-auto z-20">
+              <div className="h-9 w-16 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse" />
+              <div className="h-9 w-20 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse" />
+            </div>
           </NavBody>
+          <MobileNav className="px-4"> 
+            <MobileNavHeader>
+              <NavbarLogo />
+              <MobileNavToggle isOpen={false} onClick={() => {}} />
+            </MobileNavHeader>
+          </MobileNav>
         </Navbar>
         
         {children}
@@ -269,8 +285,8 @@ export function MainLayoutClient({ children }: { children: React.ReactNode }) {
           <NavBody className="max-w-full px-6"> 
             <NavbarLogo />
             <NavItems items={navItems} />
-            {/* Pass session to DesktopNavActions */} 
-            <DesktopNavActions visible={effectiveVisible} session={session}/> 
+            {/* Pass session to DesktopNavActions - show loading state if needed */} 
+            <DesktopNavActions visible={effectiveVisible} session={loadingSession ? null : session}/> 
           </NavBody>
 
           {/* Mobile Navbar */}
@@ -284,7 +300,7 @@ export function MainLayoutClient({ children }: { children: React.ReactNode }) {
             <MobileNavMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)}>
               <NavItems items={navItems} onItemClick={() => setMobileMenuOpen(false)} className="flex-col w-full" />
               {/* Pass the session to MobileNavActions */}
-              <MobileNavActions session={session} />
+              <MobileNavActions session={loadingSession ? null : session} />
             </MobileNavMenu>
           </MobileNav>
       </Navbar>

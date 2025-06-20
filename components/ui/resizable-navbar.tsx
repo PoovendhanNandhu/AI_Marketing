@@ -174,21 +174,6 @@ export const NavbarButton = ({
 }: NavbarButtonProps) => {
   const Comp = asChild ? Slot : Tag;
   
-  // Create a properly typed props object to avoid TypeScript errors
-  const props: Record<string, any> = {};
-  
-  if (href) {
-    props.href = href;
-  }
-  
-  if (onClick) {
-    props.onClick = onClick;
-  }
-  
-  if (title) {
-    props.title = title;
-  }
-  
   const baseStyles = "relative z-10 flex h-9 items-center justify-center whitespace-nowrap rounded-full text-sm font-medium transition-all";
   
   const variantStyles = {
@@ -198,19 +183,57 @@ export const NavbarButton = ({
     gradient: "bg-gradient-to-b from-blue-500 to-blue-700 text-white shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset] px-4"
   };
 
+  // If href is provided, use Link component
+  if (href) {
+    return (
+      <div className="relative">
+        <Link
+          href={href}
+          className={cn(
+            baseStyles,
+            variantStyles[variant],
+            className,
+          )}
+          title={title}
+        >
+          {children}
+        </Link>
+      </div>
+    );
+  }
+
+  // If onClick is provided, use button element
+  if (onClick) {
+    return (
+      <div className="relative">
+        <button
+          onClick={onClick}
+          className={cn(
+            baseStyles,
+            variantStyles[variant],
+            className,
+          )}
+          title={title}
+        >
+          {children}
+        </button>
+      </div>
+    );
+  }
+
+  // Default fallback
   return (
     <div className="relative">
-      {/* @ts-ignore */}
-      <Comp
+      <div
         className={cn(
           baseStyles,
           variantStyles[variant],
           className,
         )}
-        {...props}
+        title={title}
       >
         {children}
-      </Comp>
+      </div>
     </div>
   );
 };

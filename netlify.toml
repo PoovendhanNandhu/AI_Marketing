@@ -12,11 +12,9 @@
   # Node.js version
   NODE_VERSION = "18"
 
-# Netlify Next.js plugin
+# Netlify Next.js plugin handles routing automatically
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-# Standard Next.js routing (no redirects needed)
 
 # Headers for security
 [[headers]]
