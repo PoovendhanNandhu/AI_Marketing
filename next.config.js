@@ -6,6 +6,10 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: { unoptimized: true },
+  // Add static export for Netlify
+  output: 'export',
+  trailingSlash: true,
+  distDir: 'out',
   webpack: (config, { isServer }) => {
     // Add webpack aliases for path resolution
     config.resolve.alias = {

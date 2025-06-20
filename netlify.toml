@@ -1,0 +1,31 @@
+[build]
+  # Build command
+  command = "npm run build"
+  
+  # Publish directory (Next.js builds to .next but Netlify needs 'out' for static export)
+  publish = "out"
+  
+  # Base directory is root (where package.json is located)
+  base = "."
+
+[build.environment]
+  # Node.js version
+  NODE_VERSION = "18"
+
+# Netlify Next.js plugin
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Redirect rules for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff" 
