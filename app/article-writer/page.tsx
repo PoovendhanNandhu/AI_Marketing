@@ -23,7 +23,7 @@ import { useAnonymousUsage } from "@/hooks/useAnonymousUsage";
 
 export default function ArticleWriter() {
   const router = useRouter();
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<any>(null);
   const { toast } = useToast();
   // Use auth hook without requiring auth to allow anonymous users
   const { user, isLoading: authLoading, isAuthenticated } = useAuth(false);
@@ -33,6 +33,16 @@ export default function ArticleWriter() {
     deviceId: deviceFingerprint,
     incrementUsage: incrementAnonymousUsage 
   } = useAnonymousUsage();
+  
+  // Initialize Supabase client on the client side
+  useEffect(() => {
+    try {
+      const client = createClient();
+      setSupabase(client);
+    } catch (error) {
+      console.error('Failed to initialize Supabase client:', error);
+    }
+  }, []);
   
   const [topic, setTopic] = useState("");
   const [tone, setTone] = useState("professional");
@@ -98,6 +108,17 @@ export default function ArticleWriter() {
     
     // For authenticated users, load their subscription data
     const loadUserSubscription = async () => {
+      if (!supabase) {
+        console.warn('Supabase client not available, using default values');
+        setUsageData({
+          used: 0,
+          limit: 5,
+          limitReached: false
+        });
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         // Check if the user already has a subscription
         const { data: subscriptions, error } = await supabase
@@ -227,7 +248,7 @@ export default function ArticleWriter() {
 
   // Check if authenticated user has a paid subscription from Stripe
   const checkStripeSubscription = useCallback(async () => {
-    if (!user || !isAuthenticated) return;
+    if (!user || !isAuthenticated || !supabase) return;
     
     try {
       console.log("Checking Stripe subscription status for user:", user.id);

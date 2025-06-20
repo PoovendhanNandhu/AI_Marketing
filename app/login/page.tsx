@@ -12,7 +12,7 @@ import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<any>(null);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,22 +20,45 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
 
+  // Initialize Supabase client on the client side
+  useEffect(() => {
+    try {
+      const client = createClient();
+      setSupabase(client);
+    } catch (error) {
+      console.error('Failed to initialize Supabase client:', error);
+      setError('Failed to initialize authentication. Please refresh the page.');
+    }
+  }, []);
+
   // Check if user is already logged in
   useEffect(() => {
+    if (!supabase) return;
+    
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        // User is already logged in, redirect to home
-        router.replace('/');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          // User is already logged in, redirect to home
+          router.replace('/');
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      } finally {
+        setCheckingSession(false);
       }
-      setCheckingSession(false);
     };
     
     checkSession();
-  }, [router, supabase.auth]);
+  }, [router, supabase]);
 
   const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!supabase) {
+      setError('Authentication not available. Please refresh the page.');
+      return;
+    }
+    
     setLoading(true);
     setError(null);
 
@@ -61,6 +84,11 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!supabase) {
+      setError('Authentication not available. Please refresh the page.');
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     try {

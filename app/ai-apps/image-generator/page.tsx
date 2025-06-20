@@ -55,7 +55,17 @@ interface UsageStats {
 
 export default function ImageGenerator() {
   const router = useRouter();
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<any>(null);
+  
+  // Initialize Supabase client on the client side
+  useEffect(() => {
+    try {
+      const client = createClient();
+      setSupabase(client);
+    } catch (error) {
+      console.error('Failed to initialize Supabase client:', error);
+    }
+  }, []);
   
   // State for prompt and generation options
   const [prompt, setPrompt] = useState<string>('');

@@ -81,11 +81,21 @@ export default function PricingPage() {
   const { toast } = useToast();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [buttonLoading, setButtonLoading] = useState<{ [key: string]: boolean }>({});
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<any>(null);
   // Use the auth hook to get user information
   const { user, isLoading: authLoading } = useAuth();
   // Track if plan data is loading
   const [plansLoading, setPlansLoading] = useState(true);
+  
+  // Initialize Supabase client on the client side
+  useEffect(() => {
+    try {
+      const client = createClient();
+      setSupabase(client);
+    } catch (error) {
+      console.error('Failed to initialize Supabase client:', error);
+    }
+  }, []);
   
   // Fetch plans from the API
   useEffect(() => {
@@ -128,6 +138,15 @@ export default function PricingPage() {
   }, []);
   
   const handleSubscription = async (planId: string, priceId: string) => {
+    if (!supabase) {
+      toast({
+        title: "Error",
+        description: "Authentication not available. Please refresh the page.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!priceId) {
       console.error("Cannot subscribe - priceId is empty for plan:", planId);
       toast({

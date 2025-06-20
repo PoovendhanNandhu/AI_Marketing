@@ -18,8 +18,15 @@ const SupabaseContext = createContext<SupabaseContextType>({
 
 // Create a provider component
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
-  // Use a non-realtime client initially
-  const [supabase] = useState(() => createClient());
+  // Use a non-realtime client initially, handle the case where it might be null during build
+  const [supabase] = useState(() => {
+    try {
+      return createClient();
+    } catch (error) {
+      console.warn('Failed to initialize Supabase client:', error);
+      return null;
+    }
+  });
   const [isLoading, setIsLoading] = useState(true);
   
   // Effect for loading realtime capabilities on demand
