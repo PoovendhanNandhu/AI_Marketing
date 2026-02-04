@@ -192,7 +192,7 @@ router.post('/generate', async (req, res) => {
         try {
             // Attempt to insert the data into the specified table
             const { data, error: insertError } = await supabase
-                .from('chat_history') // *** VERIFY THIS IS YOUR EXACT TABLE NAME ***
+                .from('chat_history')
                 .insert([dataToInsert])
                 .select(); // Optional: '.select()' retrieves the inserted row(s) for confirmation
 

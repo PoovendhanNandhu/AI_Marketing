@@ -439,14 +439,76 @@ router.post('/webhook', express.raw({type: 'application/json'}), async (req, res
         const updatedSubscription = event.data.object;
         console.log(`Subscription updated for customer: ${updatedSubscription.customer}`);
         console.log(`Subscription ID: ${updatedSubscription.id}, status: ${updatedSubscription.status}`);
-        // TODO: Update subscription status in your database
+
+        try {
+          const customer = await stripe.customers.retrieve(updatedSubscription.customer);
+          if (customer && customer.metadata && customer.metadata.supabaseUserId) {
+            const supabaseUserId = customer.metadata.supabaseUserId;
+
+            const { createClient } = require('@supabase/supabase-js');
+            const supabase = createClient(
+              process.env.SUPABASE_URL,
+              process.env.SUPABASE_SERVICE_KEY
+            );
+
+            const { error } = await supabase
+              .from('user_subscriptions')
+              .update({
+                status: updatedSubscription.status,
+                current_period_end: new Date(updatedSubscription.current_period_end * 1000).toISOString(),
+                updated_at: new Date().toISOString()
+              })
+              .eq('user_id', supabaseUserId);
+
+            if (error) {
+              console.error('Error updating subscription status in Supabase:', error);
+            } else {
+              console.log(`Successfully updated subscription status for user ${supabaseUserId}`);
+            }
+          }
+        } catch (err) {
+          console.error('Error processing subscription updated event:', err);
+        }
         break;
-        
+
       case 'customer.subscription.deleted':
         const deletedSubscription = event.data.object;
         console.log(`Subscription deleted for customer: ${deletedSubscription.customer}`);
         console.log(`Subscription ID: ${deletedSubscription.id}, status: ${deletedSubscription.status}`);
-        // TODO: Update subscription status in your database
+
+        try {
+          const customer = await stripe.customers.retrieve(deletedSubscription.customer);
+          if (customer && customer.metadata && customer.metadata.supabaseUserId) {
+            const supabaseUserId = customer.metadata.supabaseUserId;
+
+            const { createClient } = require('@supabase/supabase-js');
+            const supabase = createClient(
+              process.env.SUPABASE_URL,
+              process.env.SUPABASE_SERVICE_KEY
+            );
+
+            // Reset to free plan when subscription is deleted/canceled
+            const { error } = await supabase
+              .from('user_subscriptions')
+              .update({
+                plan_id: 'free',
+                status: 'active',
+                article_generations_limit: 5,
+                chat_messages_limit: 300,
+                image_generations_limit: 3,
+                updated_at: new Date().toISOString()
+              })
+              .eq('user_id', supabaseUserId);
+
+            if (error) {
+              console.error('Error resetting subscription to free in Supabase:', error);
+            } else {
+              console.log(`Successfully reset user ${supabaseUserId} to free plan`);
+            }
+          }
+        } catch (err) {
+          console.error('Error processing subscription deleted event:', err);
+        }
         break;
         
       case 'invoice.paid':
@@ -492,7 +554,36 @@ router.post('/webhook', express.raw({type: 'application/json'}), async (req, res
       case 'invoice.payment_failed':
         const failedInvoice = event.data.object;
         console.log(`Payment failed for invoice ${failedInvoice.id}, customer: ${failedInvoice.customer}`);
-        // TODO: Notify user of payment failure
+
+        try {
+          const customer = await stripe.customers.retrieve(failedInvoice.customer);
+          if (customer && customer.metadata && customer.metadata.supabaseUserId) {
+            const supabaseUserId = customer.metadata.supabaseUserId;
+
+            const { createClient } = require('@supabase/supabase-js');
+            const supabase = createClient(
+              process.env.SUPABASE_URL,
+              process.env.SUPABASE_SERVICE_KEY
+            );
+
+            // Update status to past_due
+            const { error } = await supabase
+              .from('user_subscriptions')
+              .update({
+                status: 'past_due',
+                updated_at: new Date().toISOString()
+              })
+              .eq('user_id', supabaseUserId);
+
+            if (error) {
+              console.error('Error updating subscription to past_due in Supabase:', error);
+            } else {
+              console.log(`Marked subscription as past_due for user ${supabaseUserId}`);
+            }
+          }
+        } catch (err) {
+          console.error('Error processing payment failed event:', err);
+        }
         break;
         
       default:

@@ -7,8 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bot, Send, Sparkles, ThumbsUp, ThumbsDown, Copy, Loader2 } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Bot, Send, Sparkles, ThumbsUp, ThumbsDown, Copy, Loader2, User } from "lucide-react";
 import { AnimatedParagraphs } from "@/components/ui/animated-paragraphs";
 import { createClient } from '@/lib/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
@@ -472,13 +472,8 @@ export default function ChatAssistant() {
                         >
                           <div className={`flex gap-3 max-w-[80%] ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
                             <Avatar className="h-8 w-8">
-                              {message.role === "assistant" ? (
-                                <AvatarImage src="/bot-avatar.png" />
-                              ) : (
-                                <AvatarImage src="/user-avatar.png" />
-                              )}
-                              <AvatarFallback>
-                                {message.role === "assistant" ? <Bot className="h-4 w-4" /> : "U"}
+                              <AvatarFallback className={message.role === "assistant" ? "bg-primary/10" : "bg-muted"}>
+                                {message.role === "assistant" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
                               </AvatarFallback>
                             </Avatar>
                             <div
