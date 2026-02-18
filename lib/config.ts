@@ -5,7 +5,9 @@ export const config = {
   apiUrl: process.env.NEXT_PUBLIC_API_URL || 
           (process.env.NODE_ENV === 'production' 
             ? 'https://ai-marketing-xvf3.onrender.com'
-            : 'http://localhost:3001'),
+            : (process.env.NODE_ENV === 'development'
+              ? 'http://localhost:3001'
+              : 'http://172.18.0.2:5001')),
   
   // Supabase configuration
   supabase: {
