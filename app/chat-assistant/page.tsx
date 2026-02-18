@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bot, Send, Sparkles, ThumbsUp, ThumbsDown, Copy, Loader2, User } from "lucide-react";
 import { AnimatedParagraphs } from "@/components/ui/animated-paragraphs";
 import { createClient } from '@/lib/supabase/client';
-import type { Session, User } from '@supabase/supabase-js';
+import type { Session } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { apiEndpoints } from '@/lib/config';
