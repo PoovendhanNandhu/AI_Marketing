@@ -329,37 +329,21 @@ export default function ChatAssistant() {
   };
 
   const updateUsageCount = useCallback(async () => {
-    if (!user || !subscription || !supabase) return;
+    if (!user || !subscription) return;
     
-    try {
-      // Increment chat messages used
-      const { error } = await supabase
-        .from('user_subscriptions')
-        .update({
-          chat_messages_used: (subscription.chat_messages_used || 0) + 1,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-      
-      if (error) {
-        console.error("Error updating usage count:", error);
-      } else {
-        // Update local state
-        setSubscription({
-          ...subscription,
-          chat_messages_used: (subscription.chat_messages_used || 0) + 1
-        });
-        
-        setUsageData(prev => ({
-          ...prev,
-          used: prev.used + 1,
-          limitReached: prev.limit !== Infinity && prev.used + 1 >= prev.limit
-        }));
-      }
-    } catch (err) {
-      console.error("Unexpected error updating usage count:", err);
-    }
-  }, [user, subscription, supabase]);
+    // Usage count is now updated on the backend
+    // Update local state for UI consistency
+    setSubscription((prev: any) => ({
+      ...prev,
+      chat_messages_used: (prev.chat_messages_used || 0) + 1
+    }));
+
+    setUsageData(prev => ({
+      ...prev,
+      used: prev.used + 1,
+      limitReached: prev.limit !== Infinity && prev.used + 1 >= prev.limit
+    }));
+  }, [user, subscription]);
 
   const handleSend = async () => {
     if (!input.trim() || !user) return;
@@ -388,7 +372,8 @@ export default function ChatAssistant() {
         body: JSON.stringify({ 
           messages: updatedMessages,
           prompt: currentInput,
-          systemInstruction
+          systemInstruction,
+          userId: user.id
         }),
       });
 

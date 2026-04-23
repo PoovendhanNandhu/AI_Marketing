@@ -5,12 +5,30 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const OpenAI = require('openai');
 
+// Ensure required environment variables are present
+const requiredEnvVars = ['OPENAI_API_KEY', 'SUPABASE_URL', 'SUPABASE_SERVICE_KEY'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+    console.error(`FATAL: Missing required environment variables: ${missingEnvVars.join(', ')}`);
+    if (process.env.NODE_ENV === 'production') {
+        process.exit(1);
+    }
+}
+
 const app = express();
+const { createClient } = require('@supabase/supabase-js');
 
 // Initialize OpenAI client
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
 // Middleware
 app.use(helmet());
@@ -54,13 +72,30 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/images', imageRoutes);
 
+async function incrementChatUsageCount(userId) {
+  if (!userId) return;
+  try {
+    const { data: subscription } = await supabase
+      .from('user_subscriptions')
+      .select('chat_messages_limit')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (subscription && subscription.chat_messages_limit === -1) return;
+
+    await supabase.rpc('increment_user_chat_messages', { p_user_id: userId });
+  } catch (err) {
+    console.error('Failed to update chat usage count:', err);
+  }
+}
+
 // Add the /api/chat route handler
 app.post('/api/chat', async (req, res) => {
     console.log('Received request to /api/chat endpoint');
     console.log('Request body:', req.body);
     
     try {
-        const { prompt, messages: chatMessages, topic, keywords, systemInstruction } = req.body;
+        const { prompt, messages: chatMessages, topic, keywords, systemInstruction, userId } = req.body;
         let finalPrompt = prompt;
 
         if (topic && keywords) {
@@ -102,8 +137,14 @@ app.post('/api/chat', async (req, res) => {
             temperature: 0.7,
         });
 
+        const responseText = completion.choices[0].message.content;
+
+        if (userId && responseText) {
+          await incrementChatUsageCount(userId);
+        }
+
         res.status(200).json({
-            response: completion.choices[0].message.content
+            response: responseText
         });
     } catch (error) {
         console.error('Error in /api/chat:', error);
