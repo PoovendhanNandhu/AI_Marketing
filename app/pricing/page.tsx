@@ -174,14 +174,6 @@ export default function PricingPage() {
     try {
       console.log(`Creating checkout session for plan ${planId} with price ${priceId} for user ${user.id}`);
       
-      // Map known test user ID to the correct Stripe customer ID
-      // This is a temporary solution for testing purposes
-      let stripeCustomerId = user.id;
-      if (user.id === 'd555b3ff-d556-4aa0-93ac-3b762fdc4d41') {
-        stripeCustomerId = 'cus_SIzIg12EWm98rb';
-        console.log(`Using known Stripe customer ID: ${stripeCustomerId} for user: ${user.id}`);
-      }
-      
       const response = await fetch(apiEndpoints.stripe.createCheckout, {
         method: 'POST',
         headers: {
@@ -189,7 +181,7 @@ export default function PricingPage() {
         },
         body: JSON.stringify({
           priceId,
-          customerId: stripeCustomerId,
+          customerId: user.id,
           successUrl: `${window.location.origin}/article-writer?subscription=success`,
           cancelUrl: `${window.location.origin}/pricing?subscription=canceled`,
         }),

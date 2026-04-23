@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { loadStripe } from '@stripe/stripe-js';
+import { apiEndpoints } from '@/lib/config';
 
 // Initialize Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
@@ -37,7 +38,7 @@ export function SubscriptionManagement({ userId }: SubscriptionManagementProps) 
   const fetchSubscriptionInfo = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/stripe/customer/${userId}`);
+      const response = await fetch(apiEndpoints.stripe.customer(userId));
       if (response.ok) {
         const data = await response.json();
         setSubscription(data);
@@ -59,7 +60,7 @@ export function SubscriptionManagement({ userId }: SubscriptionManagementProps) 
   const handlePortalAccess = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/api/stripe/create-portal-session', {
+      const response = await fetch(apiEndpoints.stripe.createPortal, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +92,7 @@ export function SubscriptionManagement({ userId }: SubscriptionManagementProps) 
   const handleCancelSubscription = async () => {
     setIsCancelling(true);
     try {
-      const response = await fetch('http://localhost:3001/api/stripe/cancel-subscription', {
+      const response = await fetch(apiEndpoints.stripe.cancelSubscription, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

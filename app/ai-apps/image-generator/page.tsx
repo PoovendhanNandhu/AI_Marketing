@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, Download, Sparkles, AlertTriangle, Info, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
+import { apiEndpoints } from '@/lib/config';
 
 // UI Components
 import { Button } from '@/components/ui/button';
@@ -117,9 +118,7 @@ export default function ImageGenerator() {
         await checkStripeSubscription(user);
         
         // Then fetch usage stats (this will get the updated limits)
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/images/usage/${user.id}`
-        );
+        const response = await fetch(apiEndpoints.images.usage(user.id));
         
         if (!response.ok) {
           const errorData = await response.json();
@@ -146,15 +145,9 @@ export default function ImageGenerator() {
     
     try {
       console.log("Checking Stripe subscription status for user:", user.id);
-      // Use the mapped customer ID if available (same as in article writer)
-      let stripeCustomerId = user.id;
-      if (user.id === 'd555b3ff-d556-4aa0-93ac-3b762fdc4d41') {
-        stripeCustomerId = 'cus_SIzIg12EWm98rb';
-        console.log(`Using known Stripe customer ID: ${stripeCustomerId}`);
-      }
       
       // Get subscription info from Stripe
-      const response = await fetch(`http://localhost:3001/api/stripe/customer/${stripeCustomerId}`);
+      const response = await fetch(apiEndpoints.stripe.customer(user.id));
       if (!response.ok) {
         throw new Error(`Failed to fetch subscription: ${response.statusText}`);
       }
@@ -195,9 +188,7 @@ export default function ImageGenerator() {
     if (!userId) return;
     
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/images/usage/${userId}`
-      );
+      const response = await fetch(apiEndpoints.images.usage(userId));
       
       if (response.ok) {
         const usageData = await response.json();
@@ -212,7 +203,7 @@ export default function ImageGenerator() {
   useEffect(() => {
     const fetchModels = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/images/models`);
+        const response = await fetch(apiEndpoints.images.models);
         
         if (!response.ok) {
           throw new Error('Failed to fetch model data');
@@ -373,7 +364,7 @@ export default function ImageGenerator() {
     setError(null);
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/images/generate`, {
+      const response = await fetch(apiEndpoints.images.generate, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,10 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const OpenAI = require('openai');
+const { createClient } = require('@supabase/supabase-js');
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
 // Structure Instructions Map for articles
 const structureInstructionsMap = {
@@ -53,9 +60,26 @@ Leave a blank line between paragraphs.
 `
 };
 
+async function incrementArticleGenerationCount(userId) {
+  if (!userId) return;
+  try {
+    const { data: subscription } = await supabase
+      .from('user_subscriptions')
+      .select('article_generations_limit')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (subscription && subscription.article_generations_limit === -1) return;
+
+    await supabase.rpc('increment_user_article_generations', { p_user_id: userId });
+  } catch (err) {
+    console.error('Failed to update article generation count:', err);
+  }
+}
+
 router.post('/chat', async (req, res) => {
   try {
-    const { topic, style, audience, tone, length, keywords, structure } = req.body;
+    const { topic, style, audience, tone, length, keywords, structure, userId } = req.body;
 
     // Retrieve specific instructions based on selected structure or default.
     const instructions = structureInstructionsMap[structure] || structureInstructionsMap.default;
@@ -94,6 +118,10 @@ ${keywords ? '- Naturally incorporates the provided keywords' : ''}
     });
 
     const responseText = completion.choices[0].message.content;
+
+    if (userId && responseText) {
+      await incrementArticleGenerationCount(userId);
+    }
 
     res.json({
       response: responseText,

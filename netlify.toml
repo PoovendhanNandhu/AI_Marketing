@@ -2,7 +2,7 @@
   # Build command
   command = "npm run build"
   
-  # Publish directory (Next.js builds to .next)
+  # Publish directory (.next is used by the @netlify/plugin-nextjs)
   publish = ".next"
   
   # Base directory is root (where package.json is located)

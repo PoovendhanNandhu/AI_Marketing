@@ -20,6 +20,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnonymousUsage } from "@/hooks/useAnonymousUsage";
+import { apiEndpoints } from '@/lib/config';
 
 export default function ArticleWriter() {
   const router = useRouter();
@@ -252,15 +253,9 @@ export default function ArticleWriter() {
     
     try {
       console.log("Checking Stripe subscription status for user:", user.id);
-      // Use the mapped customer ID if available (same as in pricing page)
-      let stripeCustomerId = user.id;
-      if (user.id === 'd555b3ff-d556-4aa0-93ac-3b762fdc4d41') {
-        stripeCustomerId = 'cus_SIzIg12EWm98rb';
-        console.log(`Using known Stripe customer ID: ${stripeCustomerId}`);
-      }
       
       // Get subscription info from Stripe
-      const response = await fetch(`http://localhost:3001/api/stripe/customer/${stripeCustomerId}`);
+      const response = await fetch(apiEndpoints.stripe.customer(user.id));
       if (!response.ok) {
         throw new Error(`Failed to fetch subscription: ${response.statusText}`);
       }
@@ -328,38 +323,21 @@ export default function ArticleWriter() {
       return;
     }
     
-    // For authenticated users, update database
+    // For authenticated users, the usage count is now updated on the backend
+    // We just need to update the local state for UI consistency
     if (!user || !subscription) return;
     
-    try {
-      // Increment article generations used
-      const { error } = await supabase
-        .from('user_subscriptions')
-        .update({
-          article_generations_used: (subscription.article_generations_used || 0) + 1,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-      
-      if (error) {
-        console.error("Error updating usage count:", error);
-      } else {
-        // Update local state
-        setSubscription({
-          ...subscription,
-          article_generations_used: (subscription.article_generations_used || 0) + 1
-        });
-        
-        setUsageData(prev => ({
-          ...prev,
-          used: prev.used + 1,
-          limitReached: prev.limit !== Infinity && prev.used + 1 >= prev.limit
-        }));
-      }
-    } catch (err) {
-      console.error("Unexpected error updating usage count:", err);
-    }
-  }, [user, subscription, supabase, isAuthenticated, incrementAnonymousUsage]);
+    setSubscription((prev: any) => ({
+      ...prev,
+      article_generations_used: (prev.article_generations_used || 0) + 1
+    }));
+
+    setUsageData(prev => ({
+      ...prev,
+      used: prev.used + 1,
+      limitReached: prev.limit !== Infinity && prev.used + 1 >= prev.limit
+    }));
+  }, [user, subscription, isAuthenticated, incrementAnonymousUsage]);
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
@@ -383,7 +361,7 @@ export default function ArticleWriter() {
       // Update usage count first (to prevent abuse)
       await updateUsageCount();
       
-      const response = await fetch("http://localhost:3001/api/articles/chat", {
+      const response = await fetch(apiEndpoints.articles.chat, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -394,6 +372,7 @@ export default function ArticleWriter() {
           length,
           keywords,
           structure,
+          userId: user?.id
         }),
       });
 
